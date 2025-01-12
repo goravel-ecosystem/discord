@@ -1,0 +1,93 @@
+name: Deploy
+
+jobs:
+  deploy:
+    environment: ${{ inputs.env }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Load configuration
+        uses: actions-tools/yaml-outputs@v2
+        id: load_config
+        with:
+          export-env-variables: false
+          file-path: ./deployments/config.yml
+
+      # ************************** IMPORTANT **************************
+      # Add the variables that needed by microservices here, the prefix must be INPUT_, it's a rule of the action.
+      # You only need to modify this step when you add a new microservice.
+      - name: Set environment variables
+        run: |
+          # CUSTOM VARIABLES, MODIFY WHEN YOU ADD A NEW MICROSERVICE
+        
+          # bot
+          echo "INPUT_BOT_HTTP_PORT=${{ steps.load_config.outputs.environment__production__http__port }}" >> $GITHUB_ENV
+        
+          # DEFAULT VARIABLES, DONT MODIFY
+          TAG=${{ inputs.tag }}
+          APP_NAME=${TAG%-*}
+          echo "INPUT_APP_ENV=${{ inputs.env }}" >> $GITHUB_ENV
+          echo "INPUT_APP_NAME=$APP_NAME" >> $GITHUB_ENV
+          echo "INPUT_IMAGE=${{ secrets.ALIYUN_ACR_REGISTRY }}:${{ inputs.tag }}" >> $GITHUB_ENV
+          echo "INPUT_DEPLOY=$(cat ./deployments/scripts/deploy.sh | base64 | tr -d '\n')" >> $GITHUB_ENV
+          echo "INPUT_DISCORD_BOT_TOKEN=${{ secrets.DISCORD_BOT_TOKEN }}" >> $GITHUB_ENV
+          echo "INPUT_DISCORD_PULL_REQUEST_CHANNEL_ID=${{ secrets.DISCORD_PULL_REQUEST_CHANNEL_ID }}" >> $GITHUB_ENV
+          echo "INPUT_UPTIME_CHANNEL_ID=${{ secrets.UPTIME_CHANNEL_ID }}" >> $GITHUB_ENV
+          echo "INPUT_UPTIME_WEBSITE_URL=${{ secrets.UPTIME_WEBSITE_URL }}" >> $GITHUB_ENV
+          echo "INPUT_UPTIME_WEBSITE_URL=${{ secrets.UPTIME_WEBSITE_URL }}" >> $GITHUB_ENV
+          echo "INPUT_UPTIME_WEBSITE_URL=${{ secrets.UPTIME_WEBSITE_URL }}" >> $GITHUB_ENV
+          echo "INPUT_DISCORD_CORE_ROLE_ID=${{ secrets.DISCORD_CORE_ROLE_ID }}" >> $GITHUB_ENV
+          echo "INPUT_GITHUB_WEBHOOK_SECRET=${{ secrets.GITHUB_WEBHOOK_SECRET }}" >> $GITHUB_ENV
+          echo "INPUT_UPTIME_ALERT_MESSAGE=${{ secrets.UPTIME_ALERT_MESSAGE }}" >> $GITHUB_ENV
+          echo "INPUT_UPTIME_CHECK_INTERVAL=${{ secrets.UPTIME_CHECK_INTERVAL }}" >> $GITHUB_ENV
+
+        # ************************** DONT MODIFY **************************
+      - name: Login to ACR
+        uses: aliyun/acr-login@v1
+        with:
+          username: ${{ secrets.ALIYUN_ACR_USERNAME }}
+          password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+          region-id: ${{ secrets.ALIYUN_ACR_REGION_ID }}
+          login-server: ${{ secrets.ALIYUN_ACR_LOGIN_SERVER }}
+
+      - name: Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: ${{ secrets.SERVER_PORT }}
+          allenvs: true
+          script: |
+            docker pull $INPUT_IMAGE
+            APP_DOCKER_NAME=goravel-market-$INPUT_APP_ENV-$INPUT_APP_NAME
+            if docker ps --format '{{.Names}}' | grep $APP_DOCKER_NAME; then 
+              docker stop $APP_DOCKER_NAME && docker rm $APP_DOCKER_NAME
+            fi
+            echo $INPUT_DEPLOY | base64 -d | bash
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: 'The environment'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      tag:
+        description: 'The repository tag'
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      env:
+        description: 'The environment: staging or production'
+        required: true
+        type: string
+      tag:
+        description: 'The repository tag'
+        required: true
+        type: string
