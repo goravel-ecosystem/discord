@@ -23,7 +23,7 @@ func (r *UptimeService) Monitor(ctx context.Context) {
 	configInstance := config.GetInstance()
 
 	interval := configInstance.GetInt("discord.uptime.interval")
-	ticker := time.NewTicker(time.Duration(interval) * time.Minute)
+	ticker := time.NewTicker(time.Duration(interval) * time.Second)
 	defer ticker.Stop()
 
 	for {
