@@ -59,7 +59,7 @@ jobs:
           allenvs: true
           script: |
             docker pull $INPUT_IMAGE
-            APP_DOCKER_NAME=goravel-market-$INPUT_APP_ENV-$INPUT_APP_NAME
+            APP_DOCKER_NAME=discord-bot-$INPUT_APP_ENV-$INPUT_APP_NAME
             if docker ps --format '{{.Names}}' | grep $APP_DOCKER_NAME; then 
               docker stop $APP_DOCKER_NAME && docker rm $APP_DOCKER_NAME
             fi
