@@ -52,10 +52,10 @@ jobs:
       - name: Deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.DEVELOPEMENT_SERVER_HOST }}
-          username: ${{ secrets.DEVELOPEMENT_SERVER_USERNAME }}
-          password: ${{ secrets.DEVELOPEMENT_SERVER_PASSWORD }}
-          port: ${{ secrets.DEVELOPEMENT_SERVER_PORT }}
+          host: ${{ secrets.DEVELOPMENT_SERVER_HOST }}
+          username: ${{ secrets.DEVELOPMENT_SERVER_USERNAME }}
+          password: ${{ secrets.DEVELOPMENT_SERVER_PASSWORD }}
+          port: ${{ secrets.DEVELOPMENT_SERVER_PORT }}
           allenvs: true
           script: |
             docker pull $INPUT_IMAGE
