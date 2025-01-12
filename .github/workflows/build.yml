@@ -1,0 +1,68 @@
+name: Build
+
+on:
+  push:
+    tags:
+      - '*-0.*'
+      - '*-1.*'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        go:
+          - "1.23"
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.env_setup.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set environment variables
+        id: env_setup
+        run: |
+          TAG=${GITHUB_REF##*/}
+          APP_NAME=${TAG%-*}
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
+          echo "TAG=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: go mod package cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ matrix.go }}-${{ hashFiles('./go.mod') }}
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: go build
+        run: GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build --ldflags '-extldflags -static"' -o main .
+
+      - name: Login to ACR
+        uses: aliyun/acr-login@v1
+        with:
+          username: ${{ secrets.ALIYUN_ACR_USERNAME }}
+          password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+          region-id: ${{ secrets.ALIYUN_ACR_REGION_ID }}
+          login-server: ${{ secrets.ALIYUN_ACR_LOGIN_SERVER }}
+
+      - name: Build the Docker image
+        run: docker build -t ${{ secrets.ALIYUN_ACR_REGISTRY }}:$TAG .
+
+      - name: Push the Docker image
+        run: docker push ${{ secrets.ALIYUN_ACR_REGISTRY }}:$TAG
+
+  deploy-staging:
+    needs: build
+    uses: ./.github/workflows/deploy.yml
+    with:
+      env: production
+      tag: ${{ needs.build.outputs.TAG }}
+    secrets: inherit
