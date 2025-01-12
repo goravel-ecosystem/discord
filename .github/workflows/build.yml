@@ -44,7 +44,7 @@ jobs:
         run: go mod tidy
 
       - name: go build
-        run: GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build --ldflags '-extldflags -static"' -o main .
+        run: GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build --ldflags '-extldflags -static"' -o main ./cmd
 
       - name: Login to ACR
         uses: aliyun/acr-login@v1
