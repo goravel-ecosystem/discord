@@ -35,7 +35,7 @@ func (r *UptimeService) Monitor(ctx context.Context) {
 			resp, err := client.R().Get(configInstance.GetString("discord.uptime.website_url"))
 
 			var message string
-			if err != nil || resp.StatusCode() >= 100 {
+			if err != nil || (resp.StatusCode() < 200 || resp.StatusCode() >= 300) {
 				message = configInstance.GetString("discord.uptime.message")
 			}
 
