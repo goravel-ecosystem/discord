@@ -19,7 +19,7 @@ type GithubImpl struct {
 }
 
 func NewGithub() (*GithubImpl, error) {
-	webhook, err := github.New(github.Options.Secret(facades.Config().GetString("github.secret")))
+	webhook, err := github.New(github.Options.Secret(facades.Config().GetString("github.webhook_secret")))
 	if err != nil {
 		return nil, err
 	}
@@ -60,10 +60,10 @@ func (r *GithubImpl) handlePullRequestEvent(payload github.PullRequestPayload) e
 
 	channelID := facades.Config().GetString("discord.pull_requests.channel_id")
 	content := fmt.Sprintf("### 🛠️ New Pull Request Opened\n\n"+
-		"**Pull Request**: [#%d - %s](%s)\n"+
-		"**Repository**: [%s](%s)\n"+
-		"**Author**: [%s](%s)\n\n"+
-		"**State**: %s\n\n"+
+		"Pull Request: [#%d - %s](%s)\n"+
+		"Repository: [%s](%s)\n"+
+		"Author: [%s](%s)\n"+
+		// "**State**: %s\n"+
 		"CC: <@&%s>",
 		payload.Number,
 		payload.PullRequest.Title,
@@ -72,7 +72,7 @@ func (r *GithubImpl) handlePullRequestEvent(payload github.PullRequestPayload) e
 		payload.Repository.HTMLURL,
 		payload.PullRequest.User.Login,
 		payload.PullRequest.User.HTMLURL,
-		payload.PullRequest.State,
+		// payload.PullRequest.State,
 		facades.Config().GetString("discord.roles.core"))
 
 	threadID, err := r.discord.CreateThread(channelID, Thread{

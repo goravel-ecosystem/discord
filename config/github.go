@@ -7,6 +7,6 @@ import (
 func init() {
 	config := facades.Config()
 	config.Add("github", map[string]any{
-		"secret": config.Env("GITHUB_SECRET", ""),
+		"webhook_secret": config.Env("GITHUB_WEBHOOK_SECRET", ""),
 	})
 }
