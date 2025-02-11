@@ -8,12 +8,17 @@ func init() {
 	config := facades.Config()
 	config.Add("discord", map[string]any{
 		"bot": map[string]any{
-			"token": "user",
+			"token": config.Env("DISCORD_BOT_TOKEN", ""),
 		},
 		"heartbeat": map[string]any{
-			"interval":   10,
-			"url":        []string{"https://www.google.com", "https://www.youtube.com"},
-			"channel_id": "1234567890",
+			"url":        []string{"https://www.goravel.dev/heart.html"},
+			"channel_id": config.Env("DISCORD_HEARTBEAT_CHANNEL_ID", ""),
+		},
+		"pull_requests": map[string]any{
+			"channel_id": config.Env("DISCORD_PULL_REQUESTS_CHANNEL_ID", ""),
+		},
+		"roles": map[string]any{
+			"core": config.Env("DISCORD_CORE_ROLE_ID", ""),
 		},
 	})
 }

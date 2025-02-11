@@ -6,6 +6,7 @@ toolchain go1.23.3
 
 require (
 	github.com/gin-gonic/gin v1.10.0
+	github.com/go-playground/webhooks/v6 v6.4.0
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/goravel/framework v1.15.3
 	github.com/goravel/gin v1.3.2
@@ -35,6 +36,7 @@ require (
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aws/aws-sdk-go v1.55.5 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
+	github.com/bwmarrin/discordgo v0.28.1 // indirect
 	github.com/bytedance/sonic v1.12.6 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/catppuccin/go v0.2.0 // indirect
@@ -88,6 +90,7 @@ require (
 	github.com/gookit/goutil v0.6.18 // indirect
 	github.com/gookit/validate v1.5.4 // indirect
 	github.com/goravel/file-rotatelogs/v2 v2.4.2 // indirect
+	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect

@@ -7,6 +7,6 @@ import (
 )
 
 func Api() {
-	userController := controllers.NewUserController()
-	facades.Route().Get("/users/{id}", userController.Show)
+	webhookController := controllers.NewWebhookController()
+	facades.Route().Post("/webhooks/github", webhookController.Github)
 }
