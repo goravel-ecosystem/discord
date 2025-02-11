@@ -1,9 +1,9 @@
 version: '3'
 
 services:
-  goravel:
+  discord:
     build:
       context: .
     ports:
-      - "3000:3000"
+      - "4500:4500"
     restart: always
