@@ -2,4 +2,4 @@
 .DS_Store
 .env
 storage/framework
-goravel
+database/goravel.db
