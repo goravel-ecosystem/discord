@@ -12,73 +12,71 @@
 
 </div>
 
-English | [中文](./README_zh.md)
+[English](./README.md) | 中文
 
-## About Goravel
+# 关于 Goravel
 
-Goravel is a web application framework with complete functions and good scalability. As a starting scaffolding to help
-Gopher quickly build their own applications.
+Goravel 是一个功能完备、具有良好扩展能力的 Web 应用程序框架。作为一个起始脚手架帮助 Golang 开发者快速构建自己的应用。
 
-The framework style is consistent with [Laravel](https://github.com/laravel/laravel), let Php developer don't need to learn a
-new framework, but also happy to play around Golang! In tribute to Laravel!
+框架风格与 [Laravel](https://github.com/laravel/laravel) 保持一致，让 Phper 不用学习新的框架，也可以愉快的玩转 Golang！致敬
+Laravel！
 
-Welcome to star, PR and issues！
+欢迎 Star, PR, Issues！
 
-## Getting started
+## 快速上手
 
 ```
-// Generate APP_KEY
+// 生成 APP_KEY
 go run . artisan key:generate
 
-// Route
+// 定义路由
 facades.Route().Get("/", userController.Show)
 
-// ORM
+// 数据库查询
 facades.Orm().Query().With("Author").First(&user)
 
-// Task Scheduling
+// 任务调度
 facades.Schedule().Command("send:emails name").EveryMinute()
 
-// Log
+// 记录 Log
 facades.Log().Debug(message)
 
-// Cache
+// 获取缓存
 value := facades.Cache().Get("goravel", "default")
 
-// Queues
+// 队列
 err := facades.Queue().Job(&jobs.Test{}, []queue.Arg{}).Dispatch()
 ```
 
-## Documentation
+## 文档
 
-Online documentation [https://www.goravel.dev](https://www.goravel.dev)
+在线文档 [https://www.goravel.dev/zh](https://www.goravel.dev/zh)
 
-Example [https://github.com/goravel/example](https://github.com/goravel/example)
+示例 [https://github.com/goravel/example](https://github.com/goravel/example)
 
-> To optimize the documentation, please submit a PR to the documentation
-> repository [https://github.com/goravel/docs](https://github.com/goravel/docs)
+> 优化文档，请提交 PR 至文档仓库 [https://github.com/goravel/docs](https://github.com/goravel/docs)
 
-## Main Function
+## 主要功能
 
-|                                                                                        |                                                                 |                                                                          |                                                                       |                                                                                |
-|----------------------------------------------------------------------------------------|-----------------------------------------------------------------|--------------------------------------------------------------------------|-----------------------------------------------------------------------|--------------------------------------------------------------------------------|
-| [Config](https://www.goravel.dev/getting-started/configuration.html)                   | [Http](https://www.goravel.dev/the-basics/routing.html)         | [Authentication](https://www.goravel.dev/security/authentication.html)   | [Authorization](https://www.goravel.dev/security/authorization.html)  | [Orm](https://www.goravel.dev/orm/getting-started.html)                        |
-| [Migrate](https://www.goravel.dev/orm/migrations.html)                                 | [Logger](https://www.goravel.dev/the-basics/logging.html)       | [Cache](https://www.goravel.dev/digging-deeper/cache.html)               | [Grpc](https://www.goravel.dev/the-basics/grpc.html)                  | [Artisan Console](https://www.goravel.dev/digging-deeper/artisan-console.html) |
-| [Task Scheduling](https://www.goravel.dev/digging-deeper/task-scheduling.html)         | [Queue](https://www.goravel.dev/digging-deeper/queues.html)     | [Event](https://www.goravel.dev/digging-deeper/event.html)               | [FileStorage](https://www.goravel.dev/digging-deeper/filesystem.html) | [Mail](https://www.goravel.dev/digging-deeper/mail.html)                       |
-| [Validation](https://www.goravel.dev/the-basics/validation.html)                       | [Mock](https://www.goravel.dev/testing/mock.html)               | [Hash](https://www.goravel.dev/security/hashing.html)                    | [Crypt](https://www.goravel.dev/security/encryption.html)             | [Carbon](https://www.goravel.dev/digging-deeper/helpers.html)                  |
-| [Package Development](https://www.goravel.dev/digging-deeper/package-development.html) | [Testing](https://www.goravel.dev/testing/getting-started.html) | [Localization](https://www.goravel.dev/digging-deeper/localization.html) | [Session](https://www.goravel.dev/the-basics/session.html)            |                                                                                |
+|                                                                             |                                                               |                                                                    |                                                                   |                                                                               |
+|-----------------------------------------------------------------------------|---------------------------------------------------------------|--------------------------------------------------------------------|-------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| [自定义配置](https://www.goravel.dev/zh/getting-started/configuration.html)      | [HTTP 服务](https://www.goravel.dev/zh/the-basics/routing.html) | [用户认证](https://www.goravel.dev/zh/security/authentication.html)    | [用户授权](https://www.goravel.dev/zh/security/authorization.html)    | [数据库 ORM](https://www.goravel.dev/zh/orm/getting-started.html)                |
+| [数据库迁移](https://www.goravel.dev/zh/orm/migrations.html)                     | [日志](https://www.goravel.dev/zh/the-basics/logging.html)      | [缓存](https://www.goravel.dev/zh/digging-deeper/cache.html)         | [Grpc](https://www.goravel.dev/zh/the-basics/grpc.html)           | [Artisan 命令行](https://www.goravel.dev/zh/digging-deeper/artisan-console.html) |
+| [任务调度](https://www.goravel.dev/zh/digging-deeper/task-scheduling.html)      | [队列](https://www.goravel.dev/zh/digging-deeper/queues.html)   | [事件系统](https://www.goravel.dev/zh/digging-deeper/event.html)       | [文件存储](https://www.goravel.dev/zh/digging-deeper/filesystem.html) | [邮件](https://www.goravel.dev/zh/digging-deeper/mail.html)                     |
+| [表单验证](https://www.goravel.dev/zh/the-basics/validation.html)               | [Mock](https://www.goravel.dev/zh/digging-deeper/mock.html)   | [Hash](https://www.goravel.dev/zh/security/hashing.html)           | [Crypt](https://www.goravel.dev/zh/security/encryption.html)      | [Carbon](https://www.goravel.dev/zh/digging-deeper/helpers.html)              |
+| [扩展包开发](https://www.goravel.dev/zh/digging-deeper/package-development.html) | [测试](https://www.goravel.dev/zh/testing/getting-started.html) | [本地化](https://www.goravel.dev/zh/digging-deeper/localization.html) | [Session](https://www.goravel.dev/zh/the-basics/session.html)     |                                                                               |
 
-## Roadmap
+## 路线图
 
-[For Detail](https://github.com/goravel/goravel/issues?q=is%3Aissue+is%3Aopen)
+[查看详情](https://github.com/goravel/goravel/issues?q=is%3Aissue+is%3Aopen)
 
-## Excellent Extend Packages
+## 优秀扩展包
 
-[For Detail](https://www.goravel.dev/prologue/packages.html)
+[查看详情](https://www.goravel.dev/zh/prologue/packages.html)
 
-## Contributors
+## 贡献者
 
-This project exists thanks to all the people who contribute, to participate in the contribution, please see [Contribution Guide](https://www.goravel.dev/prologue/contributions.html).
+这个项目的存在要归功于所有做出贡献的人，参与贡献请查看[贡献指南](https://www.goravel.dev/zh/prologue/contributions.html)。
 
 <a href="https://github.com/hwbrzzl" target="_blank"><img src="https://avatars.githubusercontent.com/u/24771476?v=4" width="48" height="48"></a>
 <a href="https://github.com/DevHaoZi" target="_blank"><img src="https://avatars.githubusercontent.com/u/115467771?v=4" width="48" height="48"></a>
@@ -106,18 +104,18 @@ This project exists thanks to all the people who contribute, to participate in t
 <a href="https://github.com/KlassnayaAfrodita" target="_blank"><img src="https://avatars.githubusercontent.com/u/113383200?v=4" width="48" height="48"></a>
 <a href="https://github.com/YlanzinhoY" target="_blank"><img src="https://avatars.githubusercontent.com/u/102574758?v=4" width="48" height="48"></a>
 
-## Sponsor
+## 打赏
 
-Better development of the project is inseparable from your support, reward us by [Open Collective](https://opencollective.com/goravel).
+开源项目的发展离不开您的支持，感谢微信打赏。
 
-<p align="left"><img src="https://www.goravel.dev/reward.png" width="200"></p>
+<p align="left"><img src="https://www.goravel.dev/reward-wechat.jpg" width="200"></p>
 
-## Group
+## 群组
 
-Welcome more discussion in Discord.
+微信入群，请备注 Goravel
 
-[https://discord.gg/cFc5csczzS](https://discord.gg/cFc5csczzS)
+<p align="left"><img src="https://www.goravel.dev/wechat.jpg" width="200"></p>
 
-## License
+## 开源许可
 
-The Goravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Goravel 框架是在 [MIT 许可](https://opensource.org/licenses/MIT) 下的开源软件。
