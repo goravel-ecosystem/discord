@@ -1,24 +1,30 @@
-# discord
+# Goravel Discord Bot
 
-A bot to help manage the Goravel Discord community.
+## Features
 
-# Run In Local
+- [x] goravel.dev Heartbeat
+- [x] Pull Requests Notifications
 
-1. Initialize .env File:
-```
-DISCORD_BOT_TOKEN=
-DISCORD_PULL_REQUEST_CHANNEL_ID=
-DISCORD_CORE_ROLE_ID=
+## Run
 
-UPTIME_CHANNEL_ID=
-UPTIME_WEBSITE_URL=https://www.goravel.dev/heart.html
-UPTIME_CHECK_INTERVAL=1
-UPTIME_ALERT_MESSAGE=
+1. Add webhook link in Github
 
-WEBHOOK_SECRET=
-```
+Get webhook secret: https://github.com/organizations/goravel/settings/hooks
 
-2. Run the bot:
-```
-go run cmd/main.go
+2. Create a discord bot
+
+Get bot token: https://discord.com/developers/applications
+
+3. Create two channels to receive warning and pull request notifications
+
+Get channel ids
+
+4. Initialize .env file
+
+5. Run docker compose
+
+Port: 4500
+
+```bash
+docker compose up --build -d
 ```

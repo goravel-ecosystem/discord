@@ -1,0 +1,7 @@
+services:
+  discord:
+    build:
+      context: .
+    ports:
+      - "4500:4500"
+    restart: always
