@@ -6,8 +6,10 @@ toolchain go1.23.3
 
 require (
 	github.com/gin-gonic/gin v1.10.0
+	github.com/go-resty/resty/v2 v2.16.5
 	github.com/goravel/framework v1.15.3
 	github.com/goravel/gin v1.3.2
+	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.70.0
 )
@@ -105,6 +107,7 @@ require (
 	github.com/lithammer/fuzzysearch v1.1.8 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.9 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
