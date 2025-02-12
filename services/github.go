@@ -45,7 +45,7 @@ func (r *GithubImpl) ProcessWebhook(request *http.Request) error {
 		}
 		return err
 	}
-	facades.Log().Info(event)
+
 	switch e := event.(type) {
 	case github.PullRequestPayload:
 		return r.handlePullRequestEvent(e)
