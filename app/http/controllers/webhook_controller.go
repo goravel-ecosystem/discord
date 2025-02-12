@@ -24,6 +24,8 @@ func NewWebhookController() *WebhookController {
 
 func (r *WebhookController) Github(ctx http.Context) http.Response {
 	if err := r.github.ProcessWebhook(ctx.Request().Origin()); err != nil {
+		facades.Log().Error(err.Error())
+
 		return ctx.Response().Json(http.StatusBadRequest, http.Json{
 			"error": err.Error(),
 		})

@@ -134,6 +134,10 @@ func (r *GithubImpl) handlePullRequestLabeledEvent(payload github.PullRequestPay
 		return err
 	}
 
+	if pullRequest.ID == 0 {
+		return nil
+	}
+
 	for _, label := range payload.PullRequest.Labels {
 		if strings.Contains(label.Name, "Review Ready") {
 			return r.discord.SendMessage(pullRequest.DiscordThreadID, "Review Ready")
@@ -166,7 +170,7 @@ func (r *GithubImpl) handlePullRequestClosedEvent(payload github.PullRequestPayl
 
 func (r *GithubImpl) getPullRequest(id int64) (*models.PullRequest, error) {
 	var pullRequest models.PullRequest
-	if err := facades.Orm().Query().Where("id", id).First(&pullRequest); err != nil {
+	if err := facades.Orm().Query().Where("github_id", id).First(&pullRequest); err != nil {
 		return nil, err
 	}
 
