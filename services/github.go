@@ -17,6 +17,7 @@ type Github interface {
 }
 
 type GithubImpl struct {
+	coreRoleID           string
 	discord              Discord
 	pullRequestChannelID string
 	webhook              *github.Webhook
@@ -34,6 +35,7 @@ func NewGithub() (*GithubImpl, error) {
 	}
 
 	return &GithubImpl{
+		coreRoleID:           facades.Config().GetString("discord.roles.core"),
 		discord:              discord,
 		pullRequestChannelID: facades.Config().GetString("discord.pull_requests.channel_id"),
 		webhook:              webhook,
@@ -92,7 +94,7 @@ func (r *GithubImpl) handlePullRequestOpenedEvent(payload github.PullRequestPayl
 		payload.PullRequest.User.Login,
 		payload.PullRequest.User.HTMLURL,
 		state,
-		facades.Config().GetString("discord.roles.core"))
+		r.coreRoleID)
 
 	threadID, err := r.discord.CreateThread(r.pullRequestChannelID, Thread{
 		Title:   payload.PullRequest.Title,
@@ -125,7 +127,7 @@ func (r *GithubImpl) handlePullRequestReadyForReviewEvent(payload github.PullReq
 		return nil
 	}
 
-	return r.discord.SendMessage(pullRequest.DiscordThreadID, "Opend")
+	return r.discord.SendMessage(pullRequest.DiscordThreadID, fmt.Sprintf("Opend CC: <@&%s>", r.coreRoleID))
 }
 
 func (r *GithubImpl) handlePullRequestLabeledEvent(payload github.PullRequestPayload) error {
@@ -140,7 +142,7 @@ func (r *GithubImpl) handlePullRequestLabeledEvent(payload github.PullRequestPay
 
 	for _, label := range payload.PullRequest.Labels {
 		if strings.Contains(label.Name, "Review Ready") {
-			return r.discord.SendMessage(pullRequest.DiscordThreadID, "Review Ready")
+			return r.discord.SendMessage(pullRequest.DiscordThreadID, fmt.Sprintf("Review Ready CC: <@&%s>", r.coreRoleID))
 		}
 	}
 
