@@ -3,11 +3,12 @@ package services
 import (
 	"errors"
 	"fmt"
-	"goravel/app/models"
 	"net/http"
 
 	"github.com/go-playground/webhooks/v6/github"
 	"github.com/goravel/framework/facades"
+
+	"goravel/app/models"
 )
 
 type Github interface {
