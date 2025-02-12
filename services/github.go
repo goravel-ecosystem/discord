@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"fmt"
+	"goravel/app/models"
 	"net/http"
 
 	"github.com/go-playground/webhooks/v6/github"
@@ -43,7 +44,7 @@ func (r *GithubImpl) ProcessWebhook(request *http.Request) error {
 		}
 		return err
 	}
-
+	facades.Log().Info(event)
 	switch e := event.(type) {
 	case github.PullRequestPayload:
 		return r.handlePullRequestEvent(e)
@@ -54,16 +55,12 @@ func (r *GithubImpl) ProcessWebhook(request *http.Request) error {
 
 // handlePullRequestEvent processes a github.PullRequestPayload.
 func (r *GithubImpl) handlePullRequestEvent(payload github.PullRequestPayload) error {
-	if payload.Action != "opened" {
-		return nil
-	}
-
 	channelID := facades.Config().GetString("discord.pull_requests.channel_id")
 	content := fmt.Sprintf("### 🛠️ New Pull Request Opened\n\n"+
 		"Pull Request: [#%d - %s](%s)\n"+
 		"Repository: [%s](%s)\n"+
 		"Author: [%s](%s)\n"+
-		// "**State**: %s\n"+
+		"State: %s\n"+
 		"CC: <@&%s>",
 		payload.Number,
 		payload.PullRequest.Title,
@@ -72,7 +69,7 @@ func (r *GithubImpl) handlePullRequestEvent(payload github.PullRequestPayload) e
 		payload.Repository.HTMLURL,
 		payload.PullRequest.User.Login,
 		payload.PullRequest.User.HTMLURL,
-		// payload.PullRequest.State,
+		payload.PullRequest.State,
 		facades.Config().GetString("discord.roles.core"))
 
 	threadID, err := r.discord.CreateThread(channelID, Thread{
@@ -83,8 +80,15 @@ func (r *GithubImpl) handlePullRequestEvent(payload github.PullRequestPayload) e
 		return err
 	}
 
-	// TODO: Save thread ID to database
-	fmt.Println(threadID)
+	pullRequest := models.PullRequest{
+		DiscordThreadID: threadID,
+		GithubID:        payload.PullRequest.ID,
+		Title:           payload.PullRequest.Title,
+		URL:             payload.PullRequest.HTMLURL,
+	}
+	if err := facades.Orm().Query().Create(&pullRequest); err != nil {
+		return err
+	}
 
 	return nil
 }
