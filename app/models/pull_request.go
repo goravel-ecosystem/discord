@@ -9,5 +9,5 @@ type PullRequest struct {
 	DiscordThreadID string
 	GithubID        int64
 	Title           string
-	URL             string
+	Url             string
 }
