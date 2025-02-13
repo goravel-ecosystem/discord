@@ -8,6 +8,7 @@ import (
 	"github.com/goravel/framework/facades"
 
 	"goravel/bootstrap"
+	"goravel/services"
 )
 
 func main() {
@@ -32,6 +33,11 @@ func main() {
 		<-quit
 		if err := facades.Route().Shutdown(); err != nil {
 			facades.Log().Errorf("Route Shutdown error: %v", err)
+		}
+
+		discord, err := services.NewDiscord()
+		if err == nil {
+			discord.Close()
 		}
 
 		os.Exit(0)

@@ -31,6 +31,8 @@ func init() {
 			"name":    config.Env("MAIL_FROM_NAME", "Example"),
 		},
 
+		"to": config.Env("MAIL_TO"),
+
 		// SMTP Server Username
 		//
 		// If your SMTP server requires a username for authentication, you should

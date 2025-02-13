@@ -2,12 +2,19 @@ package services
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/goravel/framework/facades"
 )
 
+var (
+	discordSession *discordgo.Session
+	once           sync.Once
+)
+
 type Discord interface {
+	Close()
 	CreateThread(channelID string, thread Thread) (string, error)
 	DeleteThread(threadID string) error
 	SendMessage(channelID string, message string) error
@@ -23,14 +30,28 @@ type DiscordImpl struct {
 }
 
 func NewDiscord() (*DiscordImpl, error) {
-	session, err := discordgo.New("Bot " + facades.Config().GetString("discord.bot.token"))
+	var err error
+	once.Do(func() {
+		discordSession, err = discordgo.New("Bot " + facades.Config().GetString("discord.bot.token"))
+		if err != nil {
+			return
+		}
+
+		if err = discordSession.Open(); err != nil {
+			return
+		}
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	return &DiscordImpl{
-		session: session,
+		session: discordSession,
 	}, nil
+}
+
+func (r *DiscordImpl) Close() {
+	_ = r.session.Close()
 }
 
 func (r *DiscordImpl) CreateThread(channelID string, thread Thread) (string, error) {

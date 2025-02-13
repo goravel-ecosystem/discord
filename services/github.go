@@ -53,20 +53,28 @@ func (r *GithubImpl) ProcessWebhook(request *http.Request) error {
 
 	switch e := event.(type) {
 	case github.PullRequestPayload:
-		if e.Action == "opened" {
+		if e.Action == "opened" || e.Action == "reopened" {
 			return r.handlePullRequestOpenedEvent(e)
 		}
-		if e.Action == "ready_for_review" {
-			return r.handlePullRequestReadyForReviewEvent(e)
+
+		pullRequest, err := r.getPullRequest(e.PullRequest.ID)
+		if err != nil {
+			return err
 		}
-		if e.Action == "reopened" {
-			return r.handlePullRequestOpenedEvent(e)
+
+		if pullRequest.ID == 0 {
+			return fmt.Errorf("pull request not found in database: %s %s", e.PullRequest.Title, e.PullRequest.HTMLURL)
 		}
-		if e.Action == "labeled" {
-			return r.handlePullRequestLabeledEvent(e)
-		}
-		if e.Action == "closed" {
-			return r.handlePullRequestClosedEvent(e)
+
+		switch e.Action {
+		case "ready_for_review":
+			return r.handlePullRequestReadyForReviewEvent(pullRequest)
+		case "review_requested":
+			return r.handlePullRequestReviewRequestedEvent(pullRequest)
+		case "labeled":
+			return r.handlePullRequestLabeledEvent(e, pullRequest)
+		case "closed":
+			return r.handlePullRequestClosedEvent(pullRequest)
 		}
 	}
 
@@ -117,29 +125,15 @@ func (r *GithubImpl) handlePullRequestOpenedEvent(payload github.PullRequestPayl
 	return nil
 }
 
-func (r *GithubImpl) handlePullRequestReadyForReviewEvent(payload github.PullRequestPayload) error {
-	pullRequest, err := r.getPullRequest(payload.PullRequest.ID)
-	if err != nil {
-		return err
-	}
-
-	if pullRequest.ID == 0 {
-		return nil
-	}
-
+func (r *GithubImpl) handlePullRequestReadyForReviewEvent(pullRequest *models.PullRequest) error {
 	return r.discord.SendMessage(pullRequest.DiscordThreadID, fmt.Sprintf("Opend CC: <@&%s>", r.coreRoleID))
 }
 
-func (r *GithubImpl) handlePullRequestLabeledEvent(payload github.PullRequestPayload) error {
-	pullRequest, err := r.getPullRequest(payload.PullRequest.ID)
-	if err != nil {
-		return err
-	}
+func (r *GithubImpl) handlePullRequestReviewRequestedEvent(pullRequest *models.PullRequest) error {
+	return r.discord.SendMessage(pullRequest.DiscordThreadID, fmt.Sprintf("Review Requested CC: <@&%s>", r.coreRoleID))
+}
 
-	if pullRequest.ID == 0 {
-		return nil
-	}
-
+func (r *GithubImpl) handlePullRequestLabeledEvent(payload github.PullRequestPayload, pullRequest *models.PullRequest) error {
 	for _, label := range payload.PullRequest.Labels {
 		if strings.Contains(label.Name, "Review Ready") {
 			return r.discord.SendMessage(pullRequest.DiscordThreadID, fmt.Sprintf("Review Ready CC: <@&%s>", r.coreRoleID))
@@ -149,16 +143,7 @@ func (r *GithubImpl) handlePullRequestLabeledEvent(payload github.PullRequestPay
 	return nil
 }
 
-func (r *GithubImpl) handlePullRequestClosedEvent(payload github.PullRequestPayload) error {
-	pullRequest, err := r.getPullRequest(payload.PullRequest.ID)
-	if err != nil {
-		return err
-	}
-
-	if pullRequest.ID == 0 {
-		return nil
-	}
-
+func (r *GithubImpl) handlePullRequestClosedEvent(pullRequest *models.PullRequest) error {
 	if err := r.discord.DeleteThread(pullRequest.DiscordThreadID); err != nil {
 		return err
 	}
