@@ -63,7 +63,7 @@ func (r *GithubImpl) ProcessWebhook(request *http.Request) error {
 		}
 
 		if pullRequest.ID == 0 {
-			return fmt.Errorf("pull request not found in database: %s %s", e.PullRequest.Title, e.PullRequest.HTMLURL)
+			return nil
 		}
 
 		switch e.Action {
