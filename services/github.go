@@ -69,8 +69,6 @@ func (r *GithubImpl) ProcessWebhook(request *http.Request) error {
 		switch e.Action {
 		case "ready_for_review":
 			return r.handlePullRequestReadyForReviewEvent(pullRequest)
-		case "review_requested":
-			return r.handlePullRequestReviewRequestedEvent(pullRequest)
 		case "labeled":
 			return r.handlePullRequestLabeledEvent(e, pullRequest)
 		case "closed":
@@ -127,10 +125,6 @@ func (r *GithubImpl) handlePullRequestOpenedEvent(payload github.PullRequestPayl
 
 func (r *GithubImpl) handlePullRequestReadyForReviewEvent(pullRequest *models.PullRequest) error {
 	return r.discord.SendMessage(pullRequest.DiscordThreadID, fmt.Sprintf("Opend cc: <@&%s>", r.coreRoleID))
-}
-
-func (r *GithubImpl) handlePullRequestReviewRequestedEvent(pullRequest *models.PullRequest) error {
-	return r.discord.SendMessage(pullRequest.DiscordThreadID, fmt.Sprintf("Review Requested cc: <@&%s>", r.coreRoleID))
 }
 
 func (r *GithubImpl) handlePullRequestLabeledEvent(payload github.PullRequestPayload, pullRequest *models.PullRequest) error {
