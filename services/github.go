@@ -93,7 +93,7 @@ func (r *GithubImpl) handlePullRequestOpenedEvent(payload github.PullRequestPayl
 		"Repository: [%s](%s)\n"+
 		"Author: [%s](%s)\n"+
 		"State: %s\n"+
-		"CC: <@&%s>",
+		"Cc: <@&%s>",
 		payload.Number,
 		payload.PullRequest.Title,
 		payload.PullRequest.HTMLURL,
@@ -126,17 +126,17 @@ func (r *GithubImpl) handlePullRequestOpenedEvent(payload github.PullRequestPayl
 }
 
 func (r *GithubImpl) handlePullRequestReadyForReviewEvent(pullRequest *models.PullRequest) error {
-	return r.discord.SendMessage(pullRequest.DiscordThreadID, fmt.Sprintf("Opend CC: <@&%s>", r.coreRoleID))
+	return r.discord.SendMessage(pullRequest.DiscordThreadID, fmt.Sprintf("Opend cc: <@&%s>", r.coreRoleID))
 }
 
 func (r *GithubImpl) handlePullRequestReviewRequestedEvent(pullRequest *models.PullRequest) error {
-	return r.discord.SendMessage(pullRequest.DiscordThreadID, fmt.Sprintf("Review Requested CC: <@&%s>", r.coreRoleID))
+	return r.discord.SendMessage(pullRequest.DiscordThreadID, fmt.Sprintf("Review Requested cc: <@&%s>", r.coreRoleID))
 }
 
 func (r *GithubImpl) handlePullRequestLabeledEvent(payload github.PullRequestPayload, pullRequest *models.PullRequest) error {
 	for _, label := range payload.PullRequest.Labels {
 		if strings.Contains(label.Name, "Review Ready") {
-			return r.discord.SendMessage(pullRequest.DiscordThreadID, fmt.Sprintf("Review Ready CC: <@&%s>", r.coreRoleID))
+			return r.discord.SendMessage(pullRequest.DiscordThreadID, fmt.Sprintf("Review Ready cc: <@&%s>", r.coreRoleID))
 		}
 	}
 
