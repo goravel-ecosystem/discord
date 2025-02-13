@@ -5,3 +5,6 @@ services:
     ports:
       - "4500:4500"
     restart: always
+    volumes:
+      - "./database:/www/database"
+      - "./storage:/www/storage"

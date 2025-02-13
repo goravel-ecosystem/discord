@@ -2,14 +2,22 @@ package services
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/goravel/framework/facades"
 )
 
+var (
+	discordSession *discordgo.Session
+	once           sync.Once
+)
+
 type Discord interface {
-	SendMessage(channelID string, message string) error
+	Close()
 	CreateThread(channelID string, thread Thread) (string, error)
+	DeleteThread(threadID string) error
+	SendMessage(channelID string, message string) error
 }
 
 type Thread struct {
@@ -22,23 +30,28 @@ type DiscordImpl struct {
 }
 
 func NewDiscord() (*DiscordImpl, error) {
-	session, err := discordgo.New("Bot " + facades.Config().GetString("discord.bot.token"))
+	var err error
+	once.Do(func() {
+		discordSession, err = discordgo.New("Bot " + facades.Config().GetString("discord.bot.token"))
+		if err != nil {
+			return
+		}
+
+		if err = discordSession.Open(); err != nil {
+			return
+		}
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	return &DiscordImpl{
-		session: session,
+		session: discordSession,
 	}, nil
 }
 
-func (r *DiscordImpl) SendMessage(channelID string, message string) error {
-	_, err := r.session.ChannelMessageSend(channelID, message)
-	if err != nil {
-		return fmt.Errorf("failed to send message to Discord: %w", err)
-	}
-
-	return nil
+func (r *DiscordImpl) Close() {
+	_ = r.session.Close()
 }
 
 func (r *DiscordImpl) CreateThread(channelID string, thread Thread) (string, error) {
@@ -50,15 +63,27 @@ func (r *DiscordImpl) CreateThread(channelID string, thread Thread) (string, err
 		return "", fmt.Errorf("failed to create thread for pull request: %w", err)
 	}
 
-	message := &discordgo.MessageSend{
-		Content: thread.Content,
-		Flags:   discordgo.MessageFlagsSuppressEmbeds,
-	}
-
-	_, err = r.session.ChannelMessageSendComplex(createdThread.ID, message)
-	if err != nil {
+	if err := r.SendMessage(createdThread.ID, thread.Content); err != nil {
 		return "", fmt.Errorf("failed to send message in thread: %w", err)
 	}
 
 	return createdThread.ID, nil
+}
+
+func (r *DiscordImpl) DeleteThread(threadID string) error {
+	_, err := r.session.ChannelDelete(threadID)
+	if err != nil {
+		return fmt.Errorf("failed to delete thread: %w", err)
+	}
+
+	return nil
+}
+
+func (r *DiscordImpl) SendMessage(channelID string, message string) error {
+	_, err := r.session.ChannelMessageSend(channelID, message)
+	if err != nil {
+		return fmt.Errorf("failed to send message to Discord: %w", err)
+	}
+
+	return nil
 }

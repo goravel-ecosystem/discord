@@ -6,9 +6,12 @@ ENV GO111MODULE=on \
     GOOS=linux
 
 WORKDIR /build
+
+COPY go.mod go.sum ./
+RUN go mod download
+
 COPY . .
-RUN go mod tidy
-RUN go build --ldflags "-extldflags -static" -o main .
+RUN go build -o main .
 
 FROM alpine:latest
 

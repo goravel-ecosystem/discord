@@ -7,6 +7,8 @@ import (
 
 func Web() {
 	facades.Route().Get("/", func(ctx http.Context) http.Response {
+		facades.Log().Info("Running")
+
 		return ctx.Response().String(http.StatusOK, "Running")
 	})
 }
