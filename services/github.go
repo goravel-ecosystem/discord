@@ -69,8 +69,8 @@ func (r *GithubImpl) ProcessWebhook(request *http.Request) error {
 		switch e.Action {
 		case "ready_for_review":
 			return r.handlePullRequestReadyForReviewEvent(pullRequest)
-		case "labeled":
-			return r.handlePullRequestLabeledEvent(e, pullRequest)
+		// case "labeled":
+		// 	return r.handlePullRequestLabeledEvent(e, pullRequest)
 		case "closed":
 			return r.handlePullRequestClosedEvent(pullRequest)
 		}
