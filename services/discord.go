@@ -5,7 +5,8 @@ import (
 	"sync"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/goravel/framework/facades"
+
+	"goravel/app/facades"
 )
 
 var (
@@ -52,6 +53,14 @@ func NewDiscord() (*DiscordImpl, error) {
 
 func (r *DiscordImpl) Close() {
 	_ = r.session.Close()
+}
+
+// CloseDiscord closes the process-wide Discord session if one was opened. It
+// is a no-op when no session exists.
+func CloseDiscord() {
+	if discordSession != nil {
+		_ = discordSession.Close()
+	}
 }
 
 func (r *DiscordImpl) CreateThread(channelID string, thread Thread) (string, error) {

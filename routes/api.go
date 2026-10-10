@@ -1,8 +1,7 @@
 package routes
 
 import (
-	"github.com/goravel/framework/facades"
-
+	"goravel/app/facades"
 	"goravel/app/http/controllers"
 )
 
