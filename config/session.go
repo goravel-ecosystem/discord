@@ -1,9 +1,10 @@
 package config
 
 import (
-	"github.com/goravel/framework/facades"
 	"github.com/goravel/framework/support/path"
 	"github.com/goravel/framework/support/str"
+
+	"goravel/app/facades"
 )
 
 func init() {
@@ -16,7 +17,16 @@ func init() {
 		// may specify any of the other wonderful drivers provided here.
 		//
 		// Supported: "file"
-		"driver": config.Env("SESSION_DRIVER", "file"),
+		"default": config.Env("SESSION_DRIVER", "file"),
+
+		// Session Drivers
+		//
+		// Here you may define all of the session drivers for your application.
+		"drivers": map[string]any{
+			"file": map[string]any{
+				"driver": "file",
+			},
+		},
 
 		// Session Lifetime
 		//

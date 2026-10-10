@@ -1,58 +1,28 @@
 package config
 
 import (
-	"github.com/goravel/framework/facades"
+	"github.com/goravel/framework/contracts/database/driver"
+	"github.com/goravel/framework/support/path"
+	sqlitefacades "github.com/goravel/sqlite/facades"
+
+	"goravel/app/facades"
 )
 
 func init() {
 	config := facades.Config()
 	config.Add("database", map[string]any{
 		// Default database connection name
-		"default": config.Env("DB_CONNECTION", "mysql"),
+		"default": config.Env("DB_CONNECTION", "sqlite"),
 
 		// Database connections
 		"connections": map[string]any{
-			"mysql": map[string]any{
-				"driver":   "mysql",
-				"host":     config.Env("DB_HOST", "127.0.0.1"),
-				"port":     config.Env("DB_PORT", 3306),
-				"database": config.Env("DB_DATABASE", "forge"),
-				"username": config.Env("DB_USERNAME", ""),
-				"password": config.Env("DB_PASSWORD", ""),
-				"charset":  "utf8mb4",
-				"loc":      "Local",
-				"prefix":   "",
-				"singular": false,
-			},
-			"postgres": map[string]any{
-				"driver":   "postgres",
-				"host":     config.Env("DB_HOST", "127.0.0.1"),
-				"port":     config.Env("DB_PORT", 5432),
-				"database": config.Env("DB_DATABASE", "forge"),
-				"username": config.Env("DB_USERNAME", ""),
-				"password": config.Env("DB_PASSWORD", ""),
-				"sslmode":  "disable",
-				"timezone": "UTC", // Asia/Shanghai
-				"prefix":   "",
-				"singular": false,
-				"schema":   "",
-			},
 			"sqlite": map[string]any{
-				"driver":   "sqlite",
-				"database": config.Env("DB_DATABASE", "forge"),
+				"database": config.Env("DB_DATABASE", path.Database("goravel.db")),
 				"prefix":   "",
 				"singular": false,
-			},
-			"sqlserver": map[string]any{
-				"driver":   "sqlserver",
-				"host":     config.Env("DB_HOST", "127.0.0.1"),
-				"port":     config.Env("DB_PORT", 1433),
-				"database": config.Env("DB_DATABASE", "forge"),
-				"username": config.Env("DB_USERNAME", ""),
-				"password": config.Env("DB_PASSWORD", ""),
-				"charset":  "utf8mb4",
-				"prefix":   "",
-				"singular": false,
+				"via": func() (driver.Driver, error) {
+					return sqlitefacades.Sqlite("sqlite")
+				},
 			},
 		},
 
@@ -101,8 +71,7 @@ func init() {
 		// the migrations on disk haven't actually been run in the database.
 		// Available Drivers: "default", "sql"
 		"migrations": map[string]any{
-			"driver": "default",
-			"table":  "migrations",
+			"table": "migrations",
 		},
 
 		// Redis Databases
