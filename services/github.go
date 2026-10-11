@@ -1,8 +1,11 @@
 package services
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -11,6 +14,18 @@ import (
 	"goravel/app/facades"
 	"goravel/app/models"
 )
+
+// maxWebhookBodyBytes caps the webhook request body read. GitHub allows
+// payloads up to 25 MB, so anything larger is rejected before verification.
+const maxWebhookBodyBytes = 25 << 20
+
+// ErrMissingSecret is returned when no github webhook secret is configured, so
+// no incoming webhook can be authenticated.
+var ErrMissingSecret = errors.New("github webhook secret is not configured")
+
+// ErrInvalidSignature is returned when a webhook payload cannot be
+// authenticated (empty, oversized, missing, or wrong signature).
+var ErrInvalidSignature = errors.New("invalid github webhook signature")
 
 type Github interface {
 	ProcessWebhook(request *http.Request) error
@@ -43,12 +58,49 @@ func NewGithub() (*GithubImpl, error) {
 }
 
 func (r *GithubImpl) ProcessWebhook(request *http.Request) error {
-	event, err := r.webhook.Parse(request, github.ReleaseEvent, github.PullRequestEvent)
+	if facades.Config().GetString("github.webhook_secret") == "" {
+		return ErrMissingSecret
+	}
+
+	request.Body = http.MaxBytesReader(nil, request.Body, maxWebhookBodyBytes)
+	body, err := io.ReadAll(request.Body)
 	if err != nil {
-		if errors.Is(err, github.ErrEventNotFound) {
-			return nil
+		var maxBytesErr *http.MaxBytesError
+		if errors.As(err, &maxBytesErr) {
+			return ErrInvalidSignature
 		}
+
 		return err
+	}
+	if len(body) == 0 {
+		return ErrInvalidSignature
+	}
+	// A delivery id is the dedupe key; a signed request without one would
+	// otherwise collapse every later headerless delivery onto the same row.
+	if request.Header.Get("X-GitHub-Delivery") == "" {
+		return ErrInvalidSignature
+	}
+	// Restore the exact bytes so the library verifies + parses them below.
+	request.Body = io.NopCloser(bytes.NewReader(body))
+
+	// Passing the header event makes the library verify the signature for every
+	// event type (otherwise it returns ErrEventNotFound before verifying).
+	event, err := r.webhook.Parse(request, github.Event(request.Header.Get("X-GitHub-Event")))
+	if err != nil {
+		if isSignatureError(err) {
+			return fmt.Errorf("%w: %w", ErrInvalidSignature, err)
+		}
+
+		// Signature passed; event type is unknown to the library. Store and stop.
+		if storeErr := storeEvent(request, body); storeErr != nil {
+			facades.Log().Error(fmt.Sprintf("failed to store webhook event: %v", storeErr))
+		}
+
+		return nil
+	}
+
+	if storeErr := storeEvent(request, body); storeErr != nil {
+		facades.Log().Error(fmt.Sprintf("failed to store webhook event: %v", storeErr))
 	}
 
 	switch e := event.(type) {
@@ -77,6 +129,43 @@ func (r *GithubImpl) ProcessWebhook(request *http.Request) error {
 	}
 
 	return nil
+}
+
+func isSignatureError(err error) bool {
+	return errors.Is(err, github.ErrHMACVerificationFailed) ||
+		errors.Is(err, github.ErrMissingHubSignatureHeader) ||
+		errors.Is(err, github.ErrMissingGithubEventHeader)
+}
+
+func storeEvent(request *http.Request, body []byte) error {
+	var meta struct {
+		Action     string `json:"action"`
+		Repository struct {
+			FullName string `json:"full_name"`
+		} `json:"repository"`
+		Sender struct {
+			Login string `json:"login"`
+		} `json:"sender"`
+	}
+	// Best-effort metadata extraction: an unparseable payload is still stored
+	// verbatim, so the unmarshal error is intentionally ignored.
+	_ = json.Unmarshal(body, &meta)
+
+	event := models.WebhookEvent{
+		Platform:   models.PlatformGithub,
+		DeliveryID: request.Header.Get("X-GitHub-Delivery"),
+		Event:      request.Header.Get("X-GitHub-Event"),
+		Action:     meta.Action,
+		Repository: meta.Repository.FullName,
+		Sender:     meta.Sender.Login,
+		Payload:    string(body),
+	}
+
+	// Match only the identity columns; every field is supplied as the insert
+	// attribute so a redelivery with a different payload does not miss the row.
+	lookup := &models.WebhookEvent{Platform: event.Platform, DeliveryID: event.DeliveryID}
+	var existing models.WebhookEvent
+	return facades.Orm().Query().WithTrashed().FirstOrCreate(&existing, lookup, &event)
 }
 
 // handlePullRequestOpenedEvent processes a github.PullRequestPayload.

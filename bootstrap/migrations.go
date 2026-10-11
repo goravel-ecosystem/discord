@@ -10,5 +10,6 @@ import (
 func Migrations() []schema.Migration {
 	return []schema.Migration{
 		&migrations.M20240915060148CreatePullRequestsTable{},
+		&migrations.M20261010120000CreateWebhookEventsTable{},
 	}
 }

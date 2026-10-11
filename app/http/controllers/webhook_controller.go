@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"errors"
+
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/contracts/mail"
 
@@ -26,6 +28,13 @@ func NewWebhookController() *WebhookController {
 func (r *WebhookController) Github(ctx http.Context) http.Response {
 	if err := r.github.ProcessWebhook(ctx.Request().Origin()); err != nil {
 		facades.Log().Error(err.Error())
+
+		if errors.Is(err, services.ErrMissingSecret) || errors.Is(err, services.ErrInvalidSignature) {
+			return ctx.Response().Json(http.StatusUnauthorized, http.Json{
+				"error": "invalid signature",
+			})
+		}
+
 		facades.Mail().To([]string{facades.Config().GetString("mail.to")}).Subject("Github Webhook Failed").Content(mail.Content{Html: err.Error()}).Send()
 
 		return ctx.Response().Json(http.StatusBadRequest, http.Json{
