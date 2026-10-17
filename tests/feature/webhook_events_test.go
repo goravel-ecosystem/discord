@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -20,6 +21,8 @@ import (
 const (
 	webhookSecret = "test-webhook-secret"
 	webhookToken  = "test-api-token"
+
+	commentDeliveryID = "2c9f4d1a-cb21-11f1-9f09-c29c45f23f62"
 )
 
 type WebhookEventsTestSuite struct {
@@ -52,6 +55,14 @@ func signGitHub(secret, payload string) string {
 	mac := hmac.New(sha256.New, []byte(secret))
 	mac.Write([]byte(payload))
 	return "sha256=" + hex.EncodeToString(mac.Sum(nil))
+}
+
+// loadFixture reads a captured GitHub delivery from testdata.
+func (s *WebhookEventsTestSuite) loadFixture(name string) string {
+	body, err := os.ReadFile(filepath.Join("testdata", name))
+	s.Require().NoError(err)
+
+	return string(body)
 }
 
 func (s *WebhookEventsTestSuite) countEvents(includeTrashed bool) int64 {
@@ -115,33 +126,35 @@ func (s *WebhookEventsTestSuite) TestWebhookRejectedWhenSecretMissing() {
 	s.Equal(int64(0), s.countEvents(true))
 }
 
-// A valid signature stores the event verbatim.
+// A real GitHub issue_comment/created delivery is stored verbatim and parsed
+// into its metadata columns. Comment events are not dispatched.
 func (s *WebhookEventsTestSuite) TestValidSignatureStoresEvent() {
-	body := `{"action":"opened","repository":{"full_name":"goravel/framework"},"sender":{"login":"bowen"}}`
+	body := s.loadFixture("github_issue_comment_created.json")
 
-	resp := s.postWebhook("delivery-valid", "push", signGitHub(webhookSecret, body), body)
+	resp := s.postWebhook(commentDeliveryID, "issue_comment", signGitHub(webhookSecret, body), body)
 	resp.AssertOk()
 
 	var stored models.WebhookEvent
-	s.NoError(facades.Orm().Query().Where("delivery_id", "delivery-valid").First(&stored))
+	s.NoError(facades.Orm().Query().Where("delivery_id", commentDeliveryID).First(&stored))
 	s.Equal(models.PlatformGithub, stored.Platform)
-	s.Equal("push", stored.Event)
-	s.Equal("opened", stored.Action)
-	s.Equal("goravel/framework", stored.Repository)
+	s.Equal("issue_comment", stored.Event)
+	s.Equal("created", stored.Action)
+	s.Equal("goravel/agents", stored.Repository)
 	s.Equal("bowen", stored.Sender)
 	s.Equal(body, stored.Payload)
+	s.Contains(stored.Payload, "@goravel-agent")
 
 	// The same delivery is stored only once, even when the redelivered payload
 	// differs, and the original row is left untouched.
-	changed := `{"action":"closed","repository":{"full_name":"other/repo"},"sender":{"login":"other"}}`
-	resp = s.postWebhook("delivery-valid", "push", signGitHub(webhookSecret, changed), changed)
+	changed := `{"action":"edited","repository":{"full_name":"other/repo"},"sender":{"login":"other"}}`
+	resp = s.postWebhook(commentDeliveryID, "issue_comment", signGitHub(webhookSecret, changed), changed)
 	resp.AssertOk()
 	s.Equal(int64(1), s.countEvents(true))
 
 	var unchanged models.WebhookEvent
-	s.NoError(facades.Orm().Query().Where("delivery_id", "delivery-valid").First(&unchanged))
+	s.NoError(facades.Orm().Query().Where("delivery_id", commentDeliveryID).First(&unchanged))
 	s.Equal(body, unchanged.Payload)
-	s.Equal("goravel/framework", unchanged.Repository)
+	s.Equal("goravel/agents", unchanged.Repository)
 }
 
 // A wrong or missing signature is rejected and nothing is stored.
