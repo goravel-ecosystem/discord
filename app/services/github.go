@@ -38,13 +38,10 @@ type GithubImpl struct {
 	webhook              *github.Webhook
 }
 
-func NewGithub() (*GithubImpl, error) {
+// newGithub wires the configured webhook secret and Discord channel settings
+// into a GithubImpl around the supplied Discord dependency.
+func newGithub(discord Discord) (*GithubImpl, error) {
 	webhook, err := github.New(github.Options.Secret(facades.Config().GetString("github.webhook_secret")))
-	if err != nil {
-		return nil, err
-	}
-
-	discord, err := NewDiscord()
 	if err != nil {
 		return nil, err
 	}
@@ -55,6 +52,15 @@ func NewGithub() (*GithubImpl, error) {
 		pullRequestChannelID: facades.Config().GetString("discord.pull_requests.channel_id"),
 		webhook:              webhook,
 	}, nil
+}
+
+func NewGithub() (*GithubImpl, error) {
+	discord, err := NewDiscord()
+	if err != nil {
+		return nil, err
+	}
+
+	return newGithub(discord)
 }
 
 func (r *GithubImpl) ProcessWebhook(request *http.Request) error {

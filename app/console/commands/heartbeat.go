@@ -8,7 +8,7 @@ import (
 	"github.com/goravel/framework/contracts/console/command"
 
 	"goravel/app/facades"
-	"goravel/services"
+	"goravel/app/services"
 )
 
 type Heartbeat struct {

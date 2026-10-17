@@ -178,7 +178,7 @@ func (s *WebhookEventsTestSuite) TestEmptyBodyIsRejected() {
 }
 
 // A body larger than the cap is rejected and nothing is stored. The cap mirrors
-// services.maxWebhookBodyBytes (25 MB) and a non-JSON Content-Type keeps the
+// app/services/github.go's maxWebhookBodyBytes (25 MB) and a non-JSON Content-Type keeps the
 // HTTP driver's request wrapper from pre-consuming the body.
 func (s *WebhookEventsTestSuite) TestOversizedBodyIsRejected() {
 	const oversizeBodyBytes = 25<<20 + 1

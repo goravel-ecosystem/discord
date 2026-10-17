@@ -3,7 +3,7 @@ package runners
 import (
 	"github.com/goravel/framework/contracts/foundation"
 
-	"goravel/services"
+	"goravel/app/services"
 )
 
 // Discord is an application runner that closes the shared Discord session on shutdown.
