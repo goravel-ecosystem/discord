@@ -6,39 +6,50 @@ import (
 	"testing"
 	"time"
 
-	"github.com/goravel/framework/contracts/foundation"
+	"github.com/goravel/framework/foundation"
+	mocksfoundation "github.com/goravel/framework/mocks/foundation"
+	frameworkmock "github.com/goravel/framework/testing/mock"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-// stubApp embeds the framework Application so only Context needs implementing.
-type stubApp struct {
-	foundation.Application
+// newAppMock returns a framework Application mock whose Context returns ctx. When
+// entered is non-nil it is closed, exactly once, on the first Context call so a
+// test can deterministically observe that Run reached its blocking wait.
+func newAppMock(t *testing.T, ctx context.Context, entered chan struct{}) *mocksfoundation.Application {
+	t.Helper()
 
-	ctx     context.Context
-	entered chan struct{}
-	once    sync.Once
-}
+	// mock.Factory() installs a mocked application as the package-level
+	// foundation.App, so restore the previous one when the test finishes.
+	originalApp := foundation.App
+	mockFactory := frameworkmock.Factory()
+	t.Cleanup(func() { foundation.App = originalApp })
 
-// Context signals entered (when set) so a test can deterministically observe
-// that Run reached its blocking wait.
-func (s *stubApp) Context() context.Context {
-	if s.entered != nil {
-		s.once.Do(func() {
-			close(s.entered)
-		})
-	}
+	appMock := mockFactory.App()
+	appMock.Test(t)
 
-	return s.ctx
+	// A bare Run hook would fire on every Context call and a second close(entered)
+	// would panic, so guard the signal with a sync.Once.
+	var once sync.Once
+	appMock.On("Context").Return(ctx).Run(func(mock.Arguments) {
+		if entered != nil {
+			once.Do(func() {
+				close(entered)
+			})
+		}
+	})
+
+	return appMock
 }
 
 func TestDiscordRunnerSignature(t *testing.T) {
-	runner := NewDiscord(&stubApp{})
+	runner := NewDiscord(newAppMock(t, context.Background(), nil))
 
 	require.Equal(t, "discord", runner.Signature())
 }
 
 func TestDiscordRunnerShouldRun(t *testing.T) {
-	runner := NewDiscord(&stubApp{})
+	runner := NewDiscord(newAppMock(t, context.Background(), nil))
 
 	require.True(t, runner.ShouldRun())
 }
@@ -46,7 +57,7 @@ func TestDiscordRunnerShouldRun(t *testing.T) {
 func TestDiscordRunnerRunBlocksUntilContextCancelled(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	entered := make(chan struct{})
-	runner := NewDiscord(&stubApp{ctx: ctx, entered: entered})
+	runner := NewDiscord(newAppMock(t, ctx, entered))
 
 	done := make(chan error, 1)
 	go func() {
@@ -78,7 +89,7 @@ func TestDiscordRunnerRunBlocksUntilContextCancelled(t *testing.T) {
 }
 
 func TestDiscordRunnerShutdownReturnsNil(t *testing.T) {
-	runner := NewDiscord(&stubApp{})
+	runner := NewDiscord(newAppMock(t, context.Background(), nil))
 
 	require.NoError(t, runner.Shutdown())
 }
