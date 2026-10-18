@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"github.com/goravel/framework/ai"
 	"github.com/goravel/framework/auth"
 	"github.com/goravel/framework/cache"
 	"github.com/goravel/framework/contracts/foundation"
@@ -22,6 +23,7 @@ import (
 	"github.com/goravel/framework/validation"
 	"github.com/goravel/framework/view"
 	"github.com/goravel/gin"
+	"github.com/goravel/openai"
 	"github.com/goravel/sqlite"
 )
 
@@ -49,5 +51,7 @@ func Providers() []foundation.ServiceProvider {
 		&mail.ServiceProvider{},
 		&schedule.ServiceProvider{},
 		&testing.ServiceProvider{},
+		&ai.ServiceProvider{},
+		&openai.ServiceProvider{},
 	}
 }
