@@ -8,3 +8,7 @@ services:
     volumes:
       - "./database:/www/database"
       - "./storage:/www/storage"
+      # .env is intentionally read-write: `artisan key:generate` and
+      # `env:encrypt`/`env:decrypt` write to the env file path
+      # (support.EnvFilePath = /www/.env). Do not append :ro.
+      - "./.env:/www/.env"
