@@ -237,7 +237,7 @@ func (r *GithubImpl) handlePullRequestClosedEvent(pullRequest *models.PullReques
 		return err
 	}
 
-	if _, err := facades.Orm().Query().Delete(&pullRequest); err != nil {
+	if _, err := facades.Orm().Query().Delete(pullRequest); err != nil {
 		return err
 	}
 
